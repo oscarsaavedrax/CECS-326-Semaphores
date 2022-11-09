@@ -34,6 +34,7 @@ int main(int argc, char** argv)
     const int SIZE = sizeof(struct SHARED_MEM_CLASS);  // size of struct object
     struct SHARED_MEM_CLASS *shared_mem_struct;  // structure of shared memory
     int shared_mem_fd;  // shared memory file descriptor
+    int local_index;	// Local variable for index from shared memory
 
     // Print child number and shared memory name
     printf("Slave begins execution\n");
@@ -59,6 +60,9 @@ int main(int argc, char** argv)
         }
         else
         {   
+	    // Copy shared memory index to local variable index
+	    local_index = shared_mem_struct->index;
+	    printf("\n\nIndex pulled from shared memory: %d\n\n", local_index);
             // Write to the shared memory segment
             shared_mem_struct->response[shared_mem_struct->index] = child_num;
             shared_mem_struct->index += 1;
