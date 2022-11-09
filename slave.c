@@ -66,7 +66,7 @@ int main(int argc, char** argv)
             // Write to the shared memory segment
             shared_mem_struct->response[shared_mem_struct->index] = child_num;
             shared_mem_struct->index += 1;
-            printf("I have written my child number [%d] to shared memory\n", child_num);
+            printf("I have written my child number [%d] to response[%d] in shared memory\n", child_num, local_index);
         }
         
         // Unmap the shared memory structure
