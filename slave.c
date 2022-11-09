@@ -25,6 +25,7 @@
 #include <sys/types.h>
 #include <sys/shm.h>
 #include <string.h>
+#include <semaphore.h>
 
 int main(int argc, char** argv)
 {
@@ -35,6 +36,7 @@ int main(int argc, char** argv)
     struct SHARED_MEM_CLASS *shared_mem_struct;  // structure of shared memory
     int shared_mem_fd;  // shared memory file descriptor
     int local_index;	// Local variable for index from shared memory
+    const char *semName = "shd_mem_sem";	// Name of the semaphore
 
     // Print child number and shared memory name
     printf("Slave begins execution\n");
@@ -60,14 +62,49 @@ int main(int argc, char** argv)
         }
         else
         {   
+	    // Create a named sempahore
+	    sem_t *mutex_sem = sem_open(semName, O_CREAT, 0660, 1);
+	    if(mutex_sem == SEM_FAILED)
+	    {
+		    printf("slave: sem_open failed: %s\n", strerror(errno));
+		    exit(1);
+	    }
+
+	    // Request to remove the named semaphore after all references to it are done
+	    if(sem_unlink(semName) == -1)
+	    {
+		    printf("slave: sem_unlink failed: %s\n", strerror(errno));
+		    exit(1);
+	    }
+
+	    // Critical section to write to shared memory
+	    if(sem_wait(mutex_sem) == -1)
+	    {
+		    printf("slave: sem_wait failed: %s\n", strerror(errno));
+		    exit(1);
+	    }
+
 	    // Copy shared memory index to local variable index
 	    local_index = shared_mem_struct->index;
-	    printf("\n\nIndex pulled from shared memory: %d\n\n", local_index);
-            // Write to the shared memory segment
+	    
+	    // Write to the shared memory segment
             shared_mem_struct->response[shared_mem_struct->index] = child_num;
             shared_mem_struct->index += 1;
-            printf("I have written my child number [%d] to response[%d] in shared memory\n", child_num, local_index);
-        }
+            
+	    // Exit critical section after writing to shared memory
+	    if(sem_post(mutex_sem) == -1)
+	    {
+		    printf("slave: sem_post failed: %s\n", strerror(errno));
+		    exit(1);
+	    }
+
+	    // Done needing semphore, close it to free it up
+	    if(sem_close(mutex_sem) == -1)
+	    {
+		    printf("slave: sem_close failed: %s\n", strerror(errno));
+		    exit(1);
+	    }
+	}
         
         // Unmap the shared memory structure
         if(munmap(shared_mem_struct, SIZE) == -1)
@@ -83,6 +120,7 @@ int main(int argc, char** argv)
             exit(1);
         }
         else
+            printf("I have written my child number [%d] to response[%d] in shared memory\n", child_num, local_index);
             printf("Slave closes access to shared memory and terminates\n");
     }
 
