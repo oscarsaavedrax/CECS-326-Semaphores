@@ -63,6 +63,9 @@ int main(int argc, char** argv)
         else
             printf("Master created a shared memory segment named %s\n", shared_mem_name);
     }
+
+    // Initialize shared memory index to 0
+    shared_mem_struct->index = 0;
     
     // Create n children
     printf("Master created %d child processes to execute slave\n\n", num_children);
