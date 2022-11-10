@@ -1,7 +1,7 @@
 /***********************************************************************
  * Programmer	: Oscar Saavedra
  * Class	    : CECS 326-01
- * Due Date	    : November 5, 2022
+ * Due Date	    : November 3, 2022
  * Description	: This program makes use of the POSIX implementation of
  *  the Linux shared memory mechanism. This master.c program takes in a 
  *  name for the shared memory segment and the number of children to
